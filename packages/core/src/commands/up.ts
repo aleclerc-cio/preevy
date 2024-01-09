@@ -156,7 +156,7 @@ const up = async ({
 
   const composeArgs = [
     ...debug ? ['--verbose'] : [],
-    'up', '-d', '--remove-orphans', '--no-build',
+    'up', '-d', '--remove-orphans',
   ]
 
   log.info(`Running: docker compose up ${composeArgs.join(' ')}`)
