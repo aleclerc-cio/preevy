@@ -1,0 +1,100 @@
+diff --git a/node_modules/oclif/lib/tarballs/bin.d.ts b/node_modules/oclif/lib/tarballs/bin.d.ts
+index f8bc8c5..47111b8 100644
+--- a/node_modules/oclif/lib/tarballs/bin.d.ts
++++ b/node_modules/oclif/lib/tarballs/bin.d.ts
+@@ -1,6 +1,7 @@
+ import { Interfaces } from '@oclif/core';
+-export declare function writeBinScripts({ baseWorkspace, config, nodeVersion, }: {
++export declare function writeBinScripts({ baseWorkspace, config, nodeOptions, nodeVersion, }: {
+     baseWorkspace: string;
+     config: Interfaces.Config;
++    nodeOptions: string[];
+     nodeVersion: string;
+ }): Promise<void>;
+diff --git a/node_modules/oclif/lib/tarballs/bin.js b/node_modules/oclif/lib/tarballs/bin.js
+index f05f8a1..5f84952 100644
+--- a/node_modules/oclif/lib/tarballs/bin.js
++++ b/node_modules/oclif/lib/tarballs/bin.js
+@@ -6,7 +6,7 @@ const fs = require("node:fs");
+ const path = require("node:path");
+ const node_util_1 = require("node:util");
+ const exec = (0, node_util_1.promisify)(node_child_process_1.exec);
+-async function writeBinScripts({ baseWorkspace, config, nodeVersion, }) {
++async function writeBinScripts({ baseWorkspace, config, nodeOptions, nodeVersion, }) {
+     const binPathEnvVar = config.scopedEnvVarKey('BINPATH');
+     const redirectedEnvVar = config.scopedEnvVarKey('REDIRECTED');
+     const clientHomeEnvVar = config.scopedEnvVarKey('OCLIF_CLIENT_HOME');
+@@ -21,12 +21,13 @@ if not "%${redirectedEnvVar}%"=="1" if exist "%LOCALAPPDATA%\\${bin}\\client\\bi
+ )
+ 
+ if not defined ${binPathEnvVar} set ${binPathEnvVar}="%~dp0${bin}.cmd"
++
+ if exist "%~dp0..\\bin\\node.exe" (
+-  "%~dp0..\\bin\\node.exe" "%~dp0..\\bin\\run" %*
++  "%~dp0..\\bin\\node.exe" ${`${nodeOptions.join(' ')} `}"%~dp0..\\bin\\run" %*
+ ) else if exist "%LOCALAPPDATA%\\oclif\\node\\node-${nodeVersion}.exe" (
+-  "%LOCALAPPDATA%\\oclif\\node\\node-${nodeVersion}.exe" "%~dp0..\\bin\\run" %*
++  "%LOCALAPPDATA%\\oclif\\node\\node-${nodeVersion}.exe" ${`${nodeOptions.join(' ')} `}"%~dp0..\\bin\\run" %*
+ ) else (
+-  node "%~dp0..\\bin\\run" %*
++  node ${`${nodeOptions.join(' ')} `}"%~dp0..\\bin\\run" %*
+ )
+ `);
+     };
+@@ -73,9 +74,9 @@ else
+     exit 1
+   fi
+   if [ "\$DEBUG" == "*" ]; then
+-    echoerr ${binPathEnvVar}="\$${binPathEnvVar}" "\$NODE" "\$DIR/run" "\$@"
++    echoerr ${binPathEnvVar}="\$${binPathEnvVar}" "\$NODE" ${`${nodeOptions.join(' ')} `}"\$DIR/run" "\$@"
+   fi
+-  "\$NODE" "\$DIR/run" "\$@"
++  "\$NODE" ${`${nodeOptions.join(' ')} `}"\$DIR/run" "\$@"
+ fi
+ `, { mode: 0o755 });
+     };
+diff --git a/node_modules/oclif/lib/tarballs/build.js b/node_modules/oclif/lib/tarballs/build.js
+index 89d6b65..874f27b 100644
+--- a/node_modules/oclif/lib/tarballs/build.js
++++ b/node_modules/oclif/lib/tarballs/build.js
+@@ -201,7 +201,7 @@ async function build(c, options = {}) {
+     await extractCLI(options.tarball ?? (await packCLI()));
+     await updatePJSON();
+     await addDependencies();
+-    await (0, bin_1.writeBinScripts)({ baseWorkspace: c.workspace(), config, nodeVersion: c.nodeVersion });
++    await (0, bin_1.writeBinScripts)({ baseWorkspace: c.workspace(), config, nodeOptions: c.nodeOptions, nodeVersion: c.nodeVersion });
+     await pretarball();
+     const targetsToBuild = c.targets.filter((t) => !options.platform || options.platform === t.platform);
+     if (options.parallel) {
+diff --git a/node_modules/oclif/lib/tarballs/config.d.ts b/node_modules/oclif/lib/tarballs/config.d.ts
+index 5523aa2..ed24112 100644
+--- a/node_modules/oclif/lib/tarballs/config.d.ts
++++ b/node_modules/oclif/lib/tarballs/config.d.ts
+@@ -4,6 +4,7 @@ export interface BuildConfig {
+     config: Interfaces.Config;
+     dist(input: string): string;
+     gitSha: string;
++    nodeOptions: string[];
+     nodeVersion: string;
+     root: string;
+     s3Config: BuildConfig['updateConfig']['s3'] & {
+diff --git a/node_modules/oclif/lib/tarballs/config.js b/node_modules/oclif/lib/tarballs/config.js
+index d567378..a1c19cf 100644
+--- a/node_modules/oclif/lib/tarballs/config.js
++++ b/node_modules/oclif/lib/tarballs/config.js
+@@ -31,6 +31,7 @@ async function buildConfig(root, options = {}) {
+     const updateConfig = config.pjson.oclif.update || {};
+     updateConfig.s3 = updateConfig.s3 || {};
+     const nodeVersion = updateConfig.node.version || process.versions.node;
++    const nodeOptions = (0, util_1.castArray)(updateConfig.node.options ?? []);
+     const targets = (0, util_1.compact)(options.targets || updateConfig.node.targets || exports.TARGETS)
+         .filter((t) => {
+         if (t === 'darwin-arm64' && semver.lt(nodeVersion, '16.0.0')) {
+@@ -47,6 +48,7 @@ async function buildConfig(root, options = {}) {
+         config,
+         dist: (...args) => path.join(config.root, 'dist', ...args),
+         gitSha: _gitSha,
++        nodeOptions,
+         nodeVersion,
+         root,
+         s3Config: updateConfig.s3,
