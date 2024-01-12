@@ -23,7 +23,7 @@ coverage
 .DS_Store
 
 oclif.manifest.json
-/dist
+# /dist
 /lib
 *-debug.log
 *-error.log

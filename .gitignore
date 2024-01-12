@@ -26,5 +26,5 @@ oclif.manifest.json
 *-error.log
 /.nyc_output
 
-packages/*/dist
+# packages/*/dist
 packages/*/tsconfig.tsbuildinfo

@@ -1,0 +1,1 @@
+{"version":3,"file":"telemetry.js","sourceRoot":"","sources":["../../../src/hooks/prerun/telemetry.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,gBAAgB,EAAE,MAAM,cAAc,CAAA;AAE/C,MAAM,IAAI,GAAgB,KAAK,EAAE,EAAE,OAAO,EAAE,OAAO,EAAE,IAAI,EAAE,EAAE,EAAE;IAC7D,gBAAgB,EAAE,CAAC,OAAO,CAAC,KAAK,EAAE;QAChC,OAAO,EAAE,OAAO,CAAC,IAAI;QACrB,IAAI;KACL,CAAC,CAAA;AACJ,CAAC,CAAA;AAED,eAAe,IAAI,CAAA"}
