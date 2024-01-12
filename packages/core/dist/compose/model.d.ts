@@ -1,0 +1,63 @@
+import { PreevyConfig } from '../config.js';
+export type ComposeSecretOrConfig = {
+    name: string;
+    file: string;
+};
+export type ComposeNetwork = null | {};
+export type ComposeBindVolume = {
+    type: 'bind';
+    source: string;
+    target: string;
+    read_only?: boolean;
+    bind?: {
+        create_host_path?: boolean;
+    };
+};
+export type ComposeVolume = {
+    type: 'volume' | 'tmpfs' | 'npipe';
+} | ComposeBindVolume;
+export type ComposeBuild = {
+    context: string;
+    args?: Record<string, string> | string[];
+    target?: string;
+    tags?: string[];
+    cache_from?: string[];
+    cache_to?: string[];
+    platforms?: string[];
+    no_cache?: boolean;
+} & ({
+    dockerfile: string;
+} | {
+    dockerfile_inline: string;
+});
+type ComposePort = {
+    mode: 'ingress';
+    target: number;
+    published?: string;
+    protocol: 'tcp' | 'udp';
+};
+type EnvString = `${string}=${string}`;
+export type ComposeService = {
+    build?: ComposeBuild;
+    restart?: 'always' | 'on-failure';
+    volumes?: ComposeVolume[];
+    extra_hosts?: string[];
+    networks?: string[];
+    ports?: ComposePort[];
+    environment?: Record<string, string | undefined> | EnvString[];
+    user?: string;
+    labels?: Record<string, string>;
+    image?: string;
+    platform?: string;
+};
+export type ComposeModel = {
+    name: string;
+    version?: string;
+    secrets?: Record<string, ComposeSecretOrConfig>;
+    configs?: Record<string, ComposeSecretOrConfig>;
+    services?: Record<string, ComposeService>;
+    networks?: Record<string, ComposeNetwork>;
+    'x-preevy'?: PreevyConfig;
+};
+export declare const composeModelFilename = "docker-compose.yaml";
+export {};

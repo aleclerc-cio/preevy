@@ -1,0 +1,57 @@
+import path from 'path';
+import sqw from 'shell-quote-word';
+const re = /^([0-9]+) ([0-9]+) ("([^"]+)") (.*)/;
+const parseFindResultLine = (line) => {
+    const match = re.exec(line);
+    if (!match) {
+        throw new Error(`Invalid line: "${line}"`);
+    }
+    const [, size, mtimeSecondsSinceEpoch, , ftype, qname] = match;
+    const [filename, , symlinkTarget] = sqw(qname);
+    return [
+        path.normalize(filename),
+        {
+            size: Number(size),
+            mtimeSecondsSinceEpoch: Number(mtimeSecondsSinceEpoch),
+            symlinkTarget,
+            isDir: ftype === 'directory',
+        },
+    ];
+};
+const parseFindResult = (findResult) => {
+    const result = Buffer.isBuffer(findResult) ? findResult.toString('utf8') : findResult;
+    const lines = result.split('\n').filter(Boolean);
+    return new Map(lines.map(parseFindResultLine));
+};
+export const filterCommand = 'find . -print0 | xargs -r0 stat -c \'%s %Y "%F" %N\'';
+const equals = ({ stats: s, symlinkTarget }, e) => {
+    const sIsDir = s.isDirectory();
+    if (e.isDir) {
+        return sIsDir;
+    }
+    if (sIsDir) {
+        return false;
+    }
+    if (e.mtimeSecondsSinceEpoch !== Math.floor(s.mtimeMs / 1000)) {
+        return false;
+    }
+    if (e.symlinkTarget) {
+        return symlinkTarget === e.symlinkTarget;
+    }
+    if (e.size !== s.size) {
+        return false;
+    }
+    return true;
+};
+export const filterStore = (from) => {
+    const map = typeof from === 'string' || Buffer.isBuffer(from)
+        ? parseFindResult(from)
+        : from;
+    return {
+        has: (fi, name) => {
+            const e = map.get(name);
+            return e !== undefined && equals(fi, e);
+        },
+    };
+};
+//# sourceMappingURL=files-filter.js.map

@@ -5,7 +5,7 @@ import { LC_API_URL, LC_AUTH_URL, LC_CLIENT_ID } from '../defaults.js'
 
 // eslint-disable-next-line no-use-before-define
 export default class Login extends BaseCommand<typeof Login> {
-  static description = 'Login to the Livecycle SaaS'
+  static description = 'Login to the Liveffffcycle SaaS'
 
   static flags = {
     'lc-auth-url': Flags.string({ required: false, default: LC_AUTH_URL, env: 'LC_AUTH_URL', description: 'The login URL' }),

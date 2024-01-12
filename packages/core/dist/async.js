@@ -1,0 +1,2 @@
+export const asyncMapValues = async (obj, callback) => Object.fromEntries(await Promise.all(Object.entries(obj).map(async ([key, value]) => [key, await callback(value, key, obj)])));
+//# sourceMappingURL=async.js.map

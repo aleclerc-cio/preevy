@@ -8,7 +8,7 @@ class Login extends BaseCommand {
         await login(this.config.dataDir, this.flags['lc-auth-url'], this.flags['lc-api-url'], this.flags['lc-client-id'], this.logger);
     }
 }
-Login.description = 'Login to the Livecycle SaaS';
+Login.description = 'Login to the Liveffffcycle SaaS';
 Login.flags = {
     'lc-auth-url': Flags.string({ required: false, default: LC_AUTH_URL, env: 'LC_AUTH_URL', description: 'The login URL' }),
     'lc-api-url': Flags.string({ required: false, default: LC_API_URL, env: 'LC_API_URL', description: "The Livecycle API URL'" }),

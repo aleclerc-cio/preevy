@@ -1,0 +1,42 @@
+import isStreamModule from 'is-stream';
+import { orderedOutput } from '@preevy/common';
+import { commandWith, checkResult, execResultFromOrderedOutput } from '../../command-executer.js';
+import { outputFromStdio } from '../../child-process.js';
+const { readable: isReadableStream } = isStreamModule;
+export const execCommand = (ssh) => async (commandArg, options = {}) => {
+    let command = Array.isArray(commandArg) ? commandArg.join(' ') : commandArg;
+    command = commandWith(command, options);
+    command = options.asRoot ? `sudo ${command}` : command;
+    const stdin = options?.stdin;
+    const result = await new Promise((resolve, reject) => {
+        ssh.exec(command, {}, (err, channel) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            if (stdin) {
+                if (isReadableStream(stdin)) {
+                    stdin.pipe(channel.stdin, { end: true });
+                }
+                else {
+                    channel.write(stdin);
+                    channel.end();
+                }
+            }
+            else {
+                channel.end();
+            }
+            const buffers = outputFromStdio(channel);
+            channel
+                .on('error', reject)
+                .on('close', (...[code, signal]) => {
+                resolve({
+                    ...execResultFromOrderedOutput(orderedOutput(buffers), options?.encoding),
+                    ...(code === null || code === undefined ? { signal: signal } : { code: Number(code) }),
+                });
+            });
+        });
+    });
+    return options.ignoreExitCode ? result : checkResult(command, result);
+};
+//# sourceMappingURL=exec.js.map

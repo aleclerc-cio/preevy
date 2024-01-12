@@ -1,0 +1,32 @@
+import { execPromiseStdout } from './child-process.js';
+export function gitContext(cwd = process.cwd()) {
+    const execGit = async (command) => await execPromiseStdout(`git ${command}`, { cwd });
+    const branchName = async () => await execGit('rev-parse --abbrev-ref HEAD')
+        .catch(() => undefined);
+    const head = async ({ short } = { short: false }) => await execGit(`rev-parse ${short ? '--short ' : ''}HEAD`)
+        .catch(() => undefined);
+    const author = async (commit) => {
+        const [email, name] = await Promise.all([
+            `log -1 ${commit} --pretty=format:'%ae'`,
+            `log -1 ${commit} --pretty=format:'%an'`,
+        ].map(cmd => execGit(cmd).catch(() => undefined)));
+        return email === undefined || name === undefined ? undefined : { name, email };
+    };
+    const remoteTrackingBranchUrl = async (localBranch) => {
+        const b = localBranch ?? (await execGit('rev-parse --abbrev-ref HEAD'));
+        const trackingRemote = await execGit(`config branch.${b}.remote || true`);
+        if (!trackingRemote) {
+            return undefined;
+        }
+        return await execGit(`config remote.${trackingRemote}.url`);
+    };
+    const localChanges = async () => await execGit('diff-index HEAD --').catch(() => '');
+    return {
+        branchName,
+        commit: head,
+        author,
+        remoteTrackingBranchUrl,
+        localChanges,
+    };
+}
+//# sourceMappingURL=git.js.map
