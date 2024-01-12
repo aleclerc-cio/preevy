@@ -129,7 +129,7 @@ const up = async ({ debug, machineStatusCommand, userAndGroup, dockerPlatform, c
         });
         const composeArgs = [
             ...debug ? ['--verbose'] : [],
-            'up', '-d', '--remove-orphans', '--party'
+            'up', '-d', '--remove-orphans'
         ];
         log.info(`Running: docker compose up ${composeArgs.join(' ')}`);
         const dockerContext = __addDisposableResource(env_1, await dockerEnvContext({ connection, log }), true);
